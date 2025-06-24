@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Formas Geométricas Educacionais</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background-color: #f8f8f8;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    form {
+      background: #fff;
+      padding: 20px;
+      border-radius: 5px;
+      max-width: 500px;
+      margin: auto;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .input-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+    }
+    input[type="number"],
+    select {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+    }
+    button {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+      color: #fff;
+      background-color: #007BFF;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .hidden {
+      display: none;
+    }
+    .result {
+      max-width: 500px;
+      margin: 20px auto;
+      padding: 15px;
+      background-color: #e9f5ff;
+      border: 1px solid #007BFF;
+      border-radius: 3px;
+      text-align: center;
+    }
+    #drawingCanvas {
+      display: block;
+      margin: 20px auto;
+      border: 1px solid #ccc;
+      background-color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <h1>Formas Geométricas Educacionais</h1>
+  <form id="formaForm">
+    <div class="input-group">
+      <label for="shape">Selecione a forma geométrica:</label>
+      <select id="shape" name="shape">
+        <option value="">-- Selecione --</option>
+        <option value="quadrado">Quadrado</option>
+        <option value="triangulo">Triângulo</option>
+        <option value="circulo">Círculo</option>
+      </select>
+    </div>
+
+    <!-- Campos para Quadrado -->
+    <div id="quadradoInputs" class="hidden">
+      <div class="input-group">
+        <label for="lado">Digite o valor do lado:</label>
+        <input type="number" id="lado" name="lado" min="0" step="any">
+      </div>
+    </div>
+
+    <!-- Campos para Triângulo -->
+    <div id="trianguloInputs" class="hidden">
+      <div class="input-group">
+        <label>Digite os lados do triângulo:</label>
+        <input type="number" id="lado1" name="lado1" placeholder="Lado 1 (base)" min="0" step="any">
+        <input type="number" id="lado2" name="lado2" placeholder="Lado 2" min="0" step="any">
+        <input type="number" id="lado3" name="lado3" placeholder="Lado 3" min="0" step="any">
+      </div>
+      <div class="input-group">
+        <label>Digite os ângulos do triângulo (em graus):</label>
+        <input type="number" id="angulo1" name="angulo1" placeholder="Ângulo 1" min="0" step="any">
+        <input type="number" id="angulo2" name="angulo2" placeholder="Ângulo 2" min="0" step="any">
+        <input type="number" id="angulo3" name="angulo3" placeholder="Ângulo 3" min="0" step="any">
+      </div>
+    </div>
+
+    <!-- Campos para Círculo -->
+    <div id="circuloInputs" class="hidden">
+      <div class="input-group">
+        <label for="raio">Digite o valor do raio:</label>
+        <input type="number" id="raio" name="raio" min="0" step="any">
+      </div>
+    </div>
+
+    <button type="button" onclick="validarForma()">Enviar</button>
+  </form>
+
+  <div id="resultado" class="result hidden"></div>
+  <canvas id="drawingCanvas" width="400" height="400"></canvas>
+
+  <script>
+    // Manipulação dos elementos de entrada e exibição dos campos conforme a forma selecionada.
+    const shapeSelect = document.getElementById('shape');
+    const quadradoInputs = document.getElementById('quadradoInputs');
+    const trianguloInputs = document.getElementById('trianguloInputs');
+    const circuloInputs = document.getElementById('circuloInputs');
+    const resultadoDiv = document.getElementById('resultado');
+
+    shapeSelect.addEventListener('change', function() {
+      quadradoInputs.style.display = 'none';
+      trianguloInputs.style.display = 'none';
+      circuloInputs.style.display = 'none';
+      resultadoDiv.style.display = 'none';
+      resultadoDiv.innerHTML = '';
+
+      const selected = shapeSelect.value;
+      if (selected === 'quadrado') {
+        quadradoInputs.style.display = 'block';
+      } else if (selected === 'triangulo') {
+        trianguloInputs.style.display = 'block';
+      } else if (selected === 'circulo') {
+        circuloInputs.style.display = 'block';
+      }
+    });
+
+    // Função para validar os dados, calcular os valores e desenhar a figura.
+    function validarForma() {
+      const selected = shapeSelect.value;
+      let mensagem = '';
+
+      if (selected === '') {
+        mensagem = 'Por favor, selecione uma forma geométrica.';
+        exibirResultado(mensagem);
+        limparCanvas();
+        return;
+      }
+
+      if (selected === 'quadrado') {
+        const lado = parseFloat(document.getElementById('lado').value);
+        if (isNaN(lado) || lado <= 0) {
+          mensagem = 'O valor do lado do quadrado deve ser um número maior que zero.';
+          exibirResultado(mensagem);
+          limparCanvas();
+          return;
+        }
+        const area = lado * lado;
+        const perimetro = 4 * lado;
+        mensagem = `<strong>Quadrado Válido!</strong><br>Lado: ${lado}<br>Área: ${area}<br>Perímetro: ${perimetro}`;
+        exibirResultado(mensagem);
+        drawShape('quadrado');
+      } else if (selected === 'triangulo') {
+        const lado1 = parseFloat(document.getElementById('lado1').value);
+        const lado2 = parseFloat(document.getElementById('lado2').value);
+        const lado3 = parseFloat(document.getElementById('lado3').value);
+        const angulo1 = parseFloat(document.getElementById('angulo1').value);
+        const angulo2 = parseFloat(document.getElementById('angulo2').value);
+        const angulo3 = parseFloat(document.getElementById('angulo3').value);
+
+        if (isNaN(lado1) || isNaN(lado2) || isNaN(lado3) || lado1 <= 0 || lado2 <= 0 || lado3 <= 0) {
+          mensagem = 'Todos os lados do triângulo devem ser números maiores que zero.';
+          exibirResultado(mensagem);
+          limparCanvas();
+          return;
+        }
+        if (isNaN(angulo1) || isNaN(angulo2) || isNaN(angulo3) || angulo1 <= 0 || angulo2 <= 0 || angulo3 <= 0) {
+          mensagem = 'Todos os ângulos do triângulo devem ser números maiores que zero.';
+          exibirResultado(mensagem);
+          limparCanvas();
+          return;
+        }
+        const somaAngulos = angulo1 + angulo2 + angulo3;
+        if (Math.abs(somaAngulos - 180) > 0.0001) {
+          mensagem = 'A soma dos ângulos de um triângulo deve ser exatamente 180°.';
+          exibirResultado(mensagem);
+          limparCanvas();
+          return;
+        }
+        if (!(lado1 < lado2 + lado3 && lado2 < lado1 + lado3 && lado3 < lado1 + lado2)) {
+          mensagem = 'Os lados informados não formam um triângulo válido (desigualdade triangular).';
+          exibirResultado(mensagem);
+          limparCanvas();
+          return;
+        }
+        const s = (lado1 + lado2 + lado3) / 2;
+        const area = Math.sqrt(s * (s - lado1) * (s - lado2) * (s - lado3));
+        const perimetro = lado1 + lado2 + lado3;
+        mensagem = `<strong>Triângulo Válido!</strong><br>Lados: ${lado1}, ${lado2}, ${lado3}<br>Ângulos: ${angulo1}°, ${angulo2}°, ${angulo3}°<br>Perímetro: ${perimetro}<br>Área: ${area.toFixed(2)}`;
+        exibirResultado(mensagem);
+        drawShape('triangulo');
+      } else if (selected === 'circulo') {
+        const raio = parseFloat(document.getElementById('raio').value);
+        if (isNaN(raio) || raio <= 0) {
+          mensagem = 'O valor do raio deve ser um número maior que zero.';
+          exibirResultado(mensagem);
+          limparCanvas();
+          return;
+        }
+        const area = Math.PI * raio * raio;
+        const circunferencia = 2 * Math.PI * raio;
+        mensagem = `<strong>Círculo Válido!</strong><br>Raio: ${raio}<br>Área: ${area.toFixed(2)}<br>Circunferência: ${circunferencia.toFixed(2)}`;
+        exibirResultado(mensagem);
+        drawShape('circulo');
+      }
+    }
+
+    // Função para exibir o resultado.
+    function exibirResultado(msg) {
+      resultadoDiv.innerHTML = msg;
+      resultadoDiv.style.display = 'block';
+    }
+
+    // Limpa o canvas caso haja erro ou mudança de dados.
+    function limparCanvas() {
+      const canvas = document.getElementById('drawingCanvas');
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    // Função para desenhar a figura no canvas de acordo com a forma
+    function drawShape(selected) {
+      const canvas = document.getElementById('drawingCanvas');
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      if (selected === 'quadrado') {
+        const lado = parseFloat(document.getElementById('lado').value);
+        let scale = (canvas.width * 0.8) / lado; // para ocupar 80% da largura do canvas
+        let sidePx = lado * scale;
+        let offsetX = (canvas.width - sidePx) / 2;
+        let offsetY = (canvas.height - sidePx) / 2;
+        ctx.beginPath();
+        ctx.rect(offsetX, offsetY, sidePx, sidePx);
+        ctx.fillStyle = 'blue';
+        ctx.fill();
+        ctx.stroke();
+      } else if (selected === 'triangulo') {
+        // Utiliza os lados para calcular a posição do vértice C com base na lei dos cossenos
+        const lado1 = parseFloat(document.getElementById('lado1').value); // Base
+        const lado2 = parseFloat(document.getElementById('lado2').value);
+        const lado3 = parseFloat(document.getElementById('lado3').value);
+
+        // Calcula as coordenadas do vértice C
+        let x = (lado1 * lado1 + lado3 * lado3 - lado2 * lado2) / (2 * lado1);
+        let y = Math.sqrt(Math.abs(lado3 * lado3 - x * x));
+
+        // Define largura e altura bruta do desenho
+        let rawWidth = Math.max(lado1, x);
+        let rawHeight = y;
+        // Fator de escala para ocupar 80% do canvas
+        let scale = Math.min((canvas.width * 0.8) / rawWidth, (canvas.height * 0.8) / rawHeight);
+        let offsetX = (canvas.width - rawWidth * scale) / 2;
+        let offsetY = (canvas.height - rawHeight * scale) / 2;
+
+        // Define os vértices após escalonamento
+        let A = { x: offsetX, y: offsetY };
+        let B = { x: offsetX + lado1 * scale, y: offsetY };
+        let C = { x: offsetX + x * scale, y: offsetY + y * scale };
+
+        ctx.beginPath();
+        ctx.moveTo(A.x, A.y);
+        ctx.lineTo(B.x, B.y);
+        ctx.lineTo(C.x, C.y);
+        ctx.closePath();
+        ctx.fillStyle = 'blue';
+        ctx.fill();
+        ctx.stroke();
+      } else if (selected === 'circulo') {
+        const raio = parseFloat(document.getElementById('raio').value);
+        let diameter = 2 * raio;
+        let scale = (canvas.width * 0.8) / diameter;
+        let radiusPx = raio * scale;
+        let centerX = canvas.width / 2;
+        let centerY = canvas.height / 2;
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radiusPx, 0, 2 * Math.PI);
+        ctx.fillStyle = 'blue';
+        ctx.fill();
+        ctx.stroke();
+      }
+    }
+  </script>
+</body>
+</html>
